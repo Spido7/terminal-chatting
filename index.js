@@ -46,8 +46,8 @@ import {
   restoreCursor,
   clearCurrentLine
 } from './src/ui.js';
-import { setAlias, getAlias } from './src/config.js';
-import { connectToStream, sendMessage } from './src/api.js';
+import { setAlias, getAlias, setToken } from './src/config.js';
+import { connectToStream, sendMessage, checkAliasStatus, registerAlias, verifyAlias } from './src/api.js';
 
 let abortController = null;
 
@@ -60,12 +60,16 @@ const rl = readline.createInterface({
 const messages = [];
 let chatActive = false;
 let muteNewline = false;
+let muteInput = false;
 
 // Override stdout.write to intercept the readline newline on enter keypress.
 // This prevents the entire terminal window from scrolling up when the user submits a message.
 const originalWrite = process.stdout.write.bind(process.stdout);
 process.stdout.write = (chunk, encoding, callback) => {
   const data = chunk.toString();
+  if (muteInput && data !== '\n' && data !== '\r\n' && data !== '\r') {
+    return true;
+  }
   if (muteNewline && (data === '\n' || data === '\r\n' || data === '\r')) {
     return true;
   }
@@ -85,7 +89,7 @@ function promptAlias() {
   
   process.stdout.write(`${COLORS.YELLOW}${COLORS.BOLD}Choose an alias: ${COLORS.RESET}`);
   
-  rl.question('', (input) => {
+  rl.question('', async (input) => {
     const alias = input.trim();
     if (!alias) {
       process.stdout.write('\n' + formatError('Alias cannot be empty. Please try again.') + '\n');
@@ -93,8 +97,115 @@ function promptAlias() {
       return;
     }
     
-    setAlias(alias);
-    initChat();
+    try {
+      const { locked } = await checkAliasStatus(alias);
+      if (locked) {
+        promptPassword(alias);
+      } else {
+        promptLockOption(alias);
+      }
+    } catch (err) {
+      process.stdout.write('\n' + formatSystem(`Could not verify alias status (${err.message}). Joining as guest...`) + '\n');
+      setTimeout(() => {
+        setAlias(alias);
+        setToken('');
+        initChat();
+      }, 1500);
+    }
+  });
+}
+
+function promptPassword(alias) {
+  process.stdout.write(`${COLORS.YELLOW}${COLORS.BOLD}This alias is locked. Enter password: ${COLORS.RESET}`);
+  
+  muteInput = true;
+  rl.question('', async (password) => {
+    muteInput = false;
+    process.stdout.write('\n');
+    
+    const pw = password.trim();
+    if (!pw) {
+      process.stdout.write(formatError('Password cannot be empty. Please try again.') + '\n');
+      setTimeout(() => promptPassword(alias), 1500);
+      return;
+    }
+    
+    try {
+      const res = await verifyAlias(alias, pw);
+      if (res.success && res.token) {
+        setAlias(alias);
+        setToken(res.token);
+        initChat();
+      } else {
+        process.stdout.write(formatError('Failed to verify alias.') + '\n');
+        setTimeout(promptAlias, 1500);
+      }
+    } catch (err) {
+      process.stdout.write(formatError(err.message || 'Incorrect password or verification error.') + '\n');
+      setTimeout(promptAlias, 1500);
+    }
+  });
+}
+
+function promptLockOption(alias) {
+  process.stdout.write(`${COLORS.YELLOW}${COLORS.BOLD}Would you like to lock @${alias} with a password? (y/n): ${COLORS.RESET}`);
+  
+  rl.question('', (ans) => {
+    const response = ans.trim().toLowerCase();
+    if (response === 'y' || response === 'yes') {
+      promptCreatePassword(alias);
+    } else {
+      setAlias(alias);
+      setToken('');
+      initChat();
+    }
+  });
+}
+
+function promptCreatePassword(alias) {
+  process.stdout.write(`${COLORS.YELLOW}${COLORS.BOLD}Create password: ${COLORS.RESET}`);
+  
+  muteInput = true;
+  rl.question('', (pw1) => {
+    muteInput = false;
+    process.stdout.write('\n');
+    
+    if (!pw1.trim()) {
+      process.stdout.write(formatError('Password cannot be empty.') + '\n');
+      setTimeout(() => promptCreatePassword(alias), 1500);
+      return;
+    }
+    
+    process.stdout.write(`${COLORS.YELLOW}${COLORS.BOLD}Confirm password: ${COLORS.RESET}`);
+    muteInput = true;
+    rl.question('', async (pw2) => {
+      muteInput = false;
+      process.stdout.write('\n');
+      
+      if (pw1 !== pw2) {
+        process.stdout.write(formatError('Passwords do not match. Let\'s try again.') + '\n');
+        setTimeout(() => promptCreatePassword(alias), 1500);
+        return;
+      }
+      
+      try {
+        const res = await registerAlias(alias, pw1);
+        if (res.success && res.token) {
+          process.stdout.write(formatSystem(`Alias @${alias} successfully locked!`) + '\n');
+          setTimeout(() => {
+            setAlias(alias);
+            setToken(res.token);
+            initChat();
+          }, 1500);
+        } else {
+          process.stdout.write(formatError('Registration failed.') + '\n');
+          setTimeout(promptAlias, 1500);
+        }
+      } catch (err) {
+        process.stdout.write(formatError(err.message || 'Error locking alias.') + '\n');
+        setTimeout(promptAlias, 1500);
+      }
+    });
   });
 }
 

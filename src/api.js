@@ -1,3 +1,5 @@
+import { getToken } from './config.js';
+
 function getApiUrl() {
   const url = process.env.API_URL;
   if (!url) {
@@ -64,13 +66,14 @@ export async function connectToStream(onMessageCallback, signal) {
  */
 export async function sendMessage(user, text) {
   const url = `${getApiUrl()}/say`;
+  const token = getToken();
 
   const response = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ user, text }),
+    body: JSON.stringify({ user, text, token }),
   });
 
   if (!response.ok) {
@@ -78,5 +81,70 @@ export async function sendMessage(user, text) {
     throw new Error(errData.error || `HTTP error! Status: ${response.status}`);
   }
 
+  return response.json();
+}
+
+/**
+ * Checks if an alias is registered and locked.
+ * @param {string} alias
+ * @returns {Promise<{ locked: boolean }>}
+ */
+export async function checkAliasStatus(alias) {
+  const url = `${getApiUrl()}/alias/check`;
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ alias }),
+  });
+  if (!response.ok) {
+    const errData = await response.json().catch(() => ({}));
+    throw new Error(errData.error || `HTTP error! Status: ${response.status}`);
+  }
+  return response.json();
+}
+
+/**
+ * Registers/locks an alias with a password.
+ * @param {string} alias
+ * @param {string} password
+ * @returns {Promise<{ success: boolean, token: string }>}
+ */
+export async function registerAlias(alias, password) {
+  const url = `${getApiUrl()}/alias/register`;
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ alias, password }),
+  });
+  if (!response.ok) {
+    const errData = await response.json().catch(() => ({}));
+    throw new Error(errData.error || `HTTP error! Status: ${response.status}`);
+  }
+  return response.json();
+}
+
+/**
+ * Verifies the password for a locked alias.
+ * @param {string} alias
+ * @param {string} password
+ * @returns {Promise<{ success: boolean, token: string }>}
+ */
+export async function verifyAlias(alias, password) {
+  const url = `${getApiUrl()}/alias/verify`;
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ alias, password }),
+  });
+  if (!response.ok) {
+    const errData = await response.json().catch(() => ({}));
+    throw new Error(errData.error || `HTTP error! Status: ${response.status}`);
+  }
   return response.json();
 }

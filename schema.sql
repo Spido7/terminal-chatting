@@ -5,3 +5,15 @@ CREATE TABLE messages (
   content TEXT NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS aliases (
+  alias TEXT PRIMARY KEY,
+  password_hash TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS rate_limits (
+  ip TEXT PRIMARY KEY,
+  last_request_time INTEGER NOT NULL,
+  tokens REAL NOT NULL
+);
