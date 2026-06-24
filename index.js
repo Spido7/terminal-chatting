@@ -1,6 +1,37 @@
 #!/usr/bin/env node
 
 import readline from 'readline';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Simple .env file loader for Node.js
+function loadEnv() {
+  try {
+    const __dirname = path.dirname(fileURLToPath(import.meta.url));
+    const envPath = path.resolve(__dirname, '.env');
+    if (fs.existsSync(envPath)) {
+      const content = fs.readFileSync(envPath, 'utf8');
+      for (const line of content.split('\n')) {
+        const trimmedLine = line.trim();
+        if (!trimmedLine || trimmedLine.startsWith('#')) continue;
+        const parts = trimmedLine.split('=');
+        if (parts.length >= 2) {
+          const key = parts[0].trim();
+          const value = parts.slice(1).join('=').trim().replace(/(^['"]|['"]$)/g, '');
+          if (key && !process.env[key]) {
+            process.env[key] = value;
+          }
+        }
+      }
+    }
+  } catch (e) {
+    // Ignore env loading errors
+  }
+}
+
+loadEnv();
+
 import { 
   clearScreen, 
   drawBanner, 

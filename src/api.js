@@ -1,4 +1,10 @@
-const API_URL = process.env.API_URL || 'https://hacker-lobby-backend.spidozx.workers.dev';
+function getApiUrl() {
+  const url = process.env.API_URL;
+  if (!url) {
+    throw new Error('API_URL environment variable is missing. Please make sure you have a .env file configured locally.');
+  }
+  return url;
+}
 
 /**
  * Connects to the SSE stream at /listen and parses incoming messages in real-time.
@@ -6,7 +12,7 @@ const API_URL = process.env.API_URL || 'https://hacker-lobby-backend.spidozx.wor
  * @param {AbortSignal} [signal] - Optional signal to abort/disconnect the connection.
  */
 export async function connectToStream(onMessageCallback, signal) {
-  const url = `${API_URL}/listen`;
+  const url = `${getApiUrl()}/listen`;
 
   try {
     const response = await fetch(url, { signal });
@@ -57,7 +63,7 @@ export async function connectToStream(onMessageCallback, signal) {
  * @returns {Promise<Object>} Response JSON.
  */
 export async function sendMessage(user, text) {
-  const url = `${API_URL}/say`;
+  const url = `${getApiUrl()}/say`;
 
   const response = await fetch(url, {
     method: 'POST',

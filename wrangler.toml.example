@@ -5,9 +5,7 @@ compatibility_date = "2024-04-03"
 [[d1_databases]]
 binding = "DB"
 database_name = "chat-db"
-database_id = "499b11c6-02c3-431c-9120-70ec7fdb2036"
+database_id = "YOUR_D1_DATABASE_ID_HERE"
 
 [triggers]
 crons = ["0 * * * *"]
-
-
