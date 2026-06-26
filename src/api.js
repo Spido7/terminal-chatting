@@ -1,11 +1,7 @@
 import { getToken } from './config.js';
 
 function getApiUrl() {
-  const url = process.env.API_URL;
-  if (!url) {
-    throw new Error('API_URL environment variable is missing. Please make sure you have a .env file configured locally.');
-  }
-  return url;
+  return process.env.API_URL || 'https://hacker-lobby-backend.spidozx.workers.dev';
 }
 
 /**
