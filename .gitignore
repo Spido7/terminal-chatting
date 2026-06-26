@@ -8,3 +8,5 @@ build/
 wrangler.toml
 .env
 documentation/
+.agent/
+openspec/

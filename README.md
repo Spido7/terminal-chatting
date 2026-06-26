@@ -1,17 +1,29 @@
 # 📟 Hacker Lobby
 
-A secure, real-time, multiplayer terminal chat application built with a zero-dependency Node.js CLI frontend and a Cloudflare Workers/D1 database serverless backend.
+A secure, real-time, multiplayer terminal chat application that connects hackers globally. The application runs entirely within your terminal, utilizing a serverless Cloudflare Workers and D1 database backend on the edge to deliver real-time messaging without latency.
 
 ---
 
-## 🚀 Getting Started with Node.js, npm, and npx
+## 🌍 Global Access & Connecting Globally
 
-To run the Hacker Lobby client and server, you need **Node.js** installed on your system. Node.js comes bundled with **npm** (Node Package Manager) and **npx** (Node Package Runner) automatically.
+Hacker Lobby is designed to connect people globally. When you run the application, it connects to a production server deployed on Cloudflare's serverless edge network. This allows you to chat in real-time with developers and terminal enthusiasts from all around the world.
 
-### 📥 1. Installation Guide
+* **Global API Backend URL**: `https://hacker-lobby-backend.spidozx.workers.dev`
+
+---
+
+## 📥 Prerequisites: Downloading Node.js and npm
+
+To run the Hacker Lobby client, you need **Node.js** installed on your system. 
+
+When you install Node.js, it automatically installs:
+1. **npm (Node Package Manager)**: Used for installing and managing Node.js packages.
+2. **npx (Node Package Runner)**: Used to execute Node.js CLI packages directly without manual global installation.
+
+### How to Download and Install
 
 #### 🪟 Windows
-* **Direct Installer**: Download the recommended LTS installer from the [official Node.js website](https://nodejs.org/). Run the `.msi` file and follow the default prompts.
+* **Direct Installer**: Download the recommended LTS installer from the [official Node.js website](https://nodejs.org/). Run the downloaded `.msi` file and follow the installer prompts.
 * **Terminal (Winget)**: Open PowerShell or Command Prompt as administrator and run:
   ```powershell
   winget install OpenJS.NodeJS
@@ -25,75 +37,67 @@ To run the Hacker Lobby client and server, you need **Node.js** installed on you
   ```
 
 #### 🐧 Linux (Ubuntu/Debian)
-Open Terminal and run the following command to install Node.js and npm:
+Open Terminal and run the following commands to install Node.js and npm:
 ```bash
 sudo apt update
 sudo apt install nodejs npm -y
 ```
 
----
+### Verifying Your Installation
+Once the installation is complete, restart your terminal application (PowerShell, Command Prompt, or bash) and verify the setup:
 
-### 💻 2. Accessing and Verifying via Terminal
-
-Once installed, restart your terminal application (PowerShell, Command Prompt, or bash) and verify the installation:
-
-1. **Verify Node.js** (executes JavaScript code):
+1. **Verify Node.js**:
    ```bash
    node -v
    ```
-2. **Verify npm** (installs and manages dependencies):
+2. **Verify npm**:
    ```bash
    npm -v
    ```
-3. **Verify npx** (executes npm packages without globally installing them):
+3. **Verify npx**:
    ```bash
    npx -v
    ```
 
 ---
 
-## 🛠️ Project Setup
+## 🚀 How to Access Hacker Lobby
 
-Follow these steps to set up and run Hacker Lobby locally:
+You can connect to the global chat room instantly using `npx`. There is no need to clone the repository or set up a local server. 
 
-### 1. Install Dependencies
-Clone the repository, navigate to the folder, and run:
-```bash
-npm install
-```
-
-### 2. Configure Backend Database
-Initialize the local Cloudflare D1 database and apply the SQL schema:
-```bash
-npx wrangler d1 execute chat-db --local --file=schema.sql
-```
-
-### 3. Run the Backend Server
-Start the local serverless backend with Wrangler:
-```bash
-npx wrangler dev
-```
-The server will start listening at `http://127.0.0.1:8787`.
-
-### 4. Connect with CLI Chat Client
-Configure the client to connect to your local backend server using environment variables:
+Run one of the following commands in your terminal, which configures the `API_URL` environment variable to point to the global server and launches the client:
 
 * **PowerShell (Windows)**:
   ```powershell
-  $env:API_URL="http://127.0.0.1:8787"; node index.js
+  $env:API_URL="https://hacker-lobby-backend.spidozx.workers.dev"; npx hacker-lobby
+  ```
+* **Command Prompt (Windows)**:
+  ```cmd
+  set API_URL=https://hacker-lobby-backend.spidozx.workers.dev && npx hacker-lobby
   ```
 * **macOS / Linux / Git Bash**:
   ```bash
-  API_URL="http://127.0.0.1:8787" node index.js
+  API_URL="https://hacker-lobby-backend.spidozx.workers.dev" npx hacker-lobby
   ```
+
+---
+
+## 💬 How to Use
+
+Once inside the lobby, you can interact with the global room:
+
+1. **Choose an Alias**: Type your nickname and press **Enter**.
+2. **Lock Your Alias (Optional)**: If you choose to lock your alias, you will be prompted to create a password. For security, characters are hidden as you type.
+3. **Chatting**: Type your message and press **Enter** to broadcast it.
+4. **Commands**:
+   * Type `/exit` or `/quit` to close the application.
 
 ---
 
 ## ✨ Features
 
 - **Real-Time Messaging**: Built on Server-Sent Events (SSE) for zero-latency multiplayer updates.
-- **Secure Alias Locking**: Users can register and lock their alias with a password. Password hashes are calculated locally and checked securely using SHA-256 and salt on the database.
-- **Input Masking**: Passwords and confirmation queries are muted on the terminal during entry.
-- **Anti-Spam Rate Limiting**: Built-in IP-based Token Bucket rate limiting (capacity: 5 requests, refilling 1 token every 1.5 seconds) to prevent bot spam.
-- **Auto-Cleanup Cron**: Cloudflare worker triggers hourly routines to automatically prune chat logs older than 6 hours.
-- **Terminal XSS Protection**: Strip ANSI escape sequences from incoming user payloads to prevent control character injection attacks.
+- **Secure Alias Locking**: Register your nickname with a password. Passwords are salted and hashed using SHA-256 for secure database verification.
+- **Input Masking**: Passwords and confirmation queries are hidden on the terminal screen during entry.
+- **Anti-Spam Rate Limiting**: Token-bucket rate limiting prevents message spamming.
+- **Terminal XSS Protection**: Filters ANSI escape sequences to prevent control character injection attacks.
