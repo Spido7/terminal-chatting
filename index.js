@@ -117,6 +117,9 @@ function promptAlias() {
 }
 
 function promptPassword(alias) {
+  rl.line = '';
+  rl.cursor = 0;
+  process.stdout.write('\r\x1B[K');
   process.stdout.write(`${COLORS.YELLOW}${COLORS.BOLD}This alias is locked. Enter password: ${COLORS.RESET}`);
   
   muteInput = true;
@@ -149,21 +152,29 @@ function promptPassword(alias) {
 }
 
 function promptLockOption(alias) {
+  rl.line = '';
+  rl.cursor = 0;
+  process.stdout.write('\r\x1B[K');
   process.stdout.write(`${COLORS.YELLOW}${COLORS.BOLD}Would you like to lock @${alias} with a password? (y/n): ${COLORS.RESET}`);
   
   rl.question('', (ans) => {
     const response = ans.trim().toLowerCase();
     if (response === 'y' || response === 'yes') {
       promptCreatePassword(alias);
-    } else {
+    } else if (response === 'n' || response === 'no') {
       setAlias(alias);
       setToken('');
       initChat();
+    } else {
+      promptLockOption(alias);
     }
   });
 }
 
 function promptCreatePassword(alias) {
+  rl.line = '';
+  rl.cursor = 0;
+  process.stdout.write('\r\x1B[K');
   process.stdout.write(`${COLORS.YELLOW}${COLORS.BOLD}Create password: ${COLORS.RESET}`);
   
   muteInput = true;
@@ -177,7 +188,10 @@ function promptCreatePassword(alias) {
       return;
     }
     
+    process.stdout.write('\r\x1B[K');
     process.stdout.write(`${COLORS.YELLOW}${COLORS.BOLD}Confirm password: ${COLORS.RESET}`);
+    rl.line = '';
+    rl.cursor = 0;
     muteInput = true;
     rl.question('', async (pw2) => {
       muteInput = false;
