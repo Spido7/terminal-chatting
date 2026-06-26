@@ -63,21 +63,28 @@ Once the installation is complete, restart your terminal application (PowerShell
 
 ## 🚀 How to Access Hacker Lobby
 
-You can connect to the global chat room instantly using `npx`. There is no need to clone the repository or set up a local server. 
+You can connect to the global chat room instantly using `npx`. There is no need to clone the repository, download files, or configure local databases.
 
-Run one of the following commands in your terminal, which configures the `API_URL` environment variable to point to the global server and launches the client:
+Simply open your terminal and run:
+```bash
+npx hacker-lobby
+```
+*This command runs the client and automatically connects to the global production server.*
+
+### Using a Custom Server URL (Optional)
+If you wish to connect to a custom/different backend, you can specify the `API_URL` environment variable:
 
 * **PowerShell (Windows)**:
   ```powershell
-  $env:API_URL="https://hacker-lobby-backend.spidozx.workers.dev"; npx hacker-lobby
+  $env:API_URL="https://your-custom-backend.workers.dev"; npx hacker-lobby
   ```
 * **Command Prompt (Windows)**:
   ```cmd
-  set API_URL=https://hacker-lobby-backend.spidozx.workers.dev && npx hacker-lobby
+  set API_URL=https://your-custom-backend.workers.dev && npx hacker-lobby
   ```
 * **macOS / Linux / Git Bash**:
   ```bash
-  API_URL="https://hacker-lobby-backend.spidozx.workers.dev" npx hacker-lobby
+  API_URL="https://your-custom-backend.workers.dev" npx hacker-lobby
   ```
 
 ---
