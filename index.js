@@ -48,6 +48,7 @@ import {
 } from './src/ui.js';
 import { setAlias, getAlias, setToken } from './src/config.js';
 import { connectToStream, sendMessage, checkAliasStatus, registerAlias, verifyAlias } from './src/api.js';
+import { encrypt, decrypt, isUsingCustomPassphrase } from './src/crypto.js';
 
 let abortController = null;
 
@@ -218,6 +219,11 @@ function initChat() {
   // Add welcome system messages
   addSystemMessage(`Welcome @${getAlias()} to the HACKER LOBBY!`);
   addSystemMessage(`Type your message and press Enter. Type "/exit" to leave.`);
+  addSystemMessage(
+    isUsingCustomPassphrase()
+      ? '🔒 E2EE active (using custom LOBBY_PASSPHRASE)'
+      : '🔒 E2EE active (using default shared lobby key)'
+  );
   
   // Set up prompt
   const promptStr = `${COLORS.CYAN}${COLORS.BOLD}[${getAlias()}]: ${COLORS.RESET}`;
@@ -226,13 +232,13 @@ function initChat() {
   // Connect to backend Server-Sent Events stream
   abortController = new AbortController();
   connectToStream((message) => {
-    addMessage(message.username, message.content);
+    addMessage(message.username, decrypt(message.content));
   }, abortController.signal).catch((err) => {
     addSystemMessage(`Stream disconnected: ${err.message}`);
   });
   
   // Post join message to the server
-  sendMessage(getAlias(), 'joined the chat').catch(() => {});
+  sendMessage(getAlias(), encrypt('joined the chat')).catch(() => {});
   
   rl.on('line', (line) => {
     // Disable newline muting once readline has finished processing the line
@@ -245,7 +251,7 @@ function initChat() {
       }
       
       // Post the message to the Edge server
-      sendMessage(getAlias(), text).catch((err) => {
+      sendMessage(getAlias(), encrypt(text)).catch((err) => {
         addSystemMessage(`Failed to send message: ${err.message}`);
       });
     }
@@ -363,7 +369,7 @@ async function cleanupAndExit() {
   }
   try {
     // Send leave notification to server before exiting
-    await sendMessage(getAlias(), 'left the chat');
+    await sendMessage(getAlias(), encrypt('left the chat'));
   } catch (_) {}
   resetScrollRegion();
   clearScreen();

@@ -1,0 +1,10 @@
+# Exclude local documentation from npm registry
+documentation/
+.agent/
+.env
+.gitignore
+wrangler.toml
+schema.sql
+worker-configuration.d.ts
+.wrangler/
+openspec/

@@ -1,6 +1,9 @@
 // Regex to match ANSI escape sequences (control codes, color formatting, etc.)
 const ansiRegex = /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g;
 
+// Regex to match encrypted content in the format ivHex:ciphertextHex
+const encryptedRegex = /^[0-9a-fA-F]{32}:[0-9a-fA-F]+$/;
+
 /**
  * Sanitizes input strings by stripping out all ANSI escape sequences to prevent terminal XSS.
  * @param {string} str
@@ -383,6 +386,10 @@ export default {
 
         if (!text || typeof text !== 'string' || !text.trim()) {
           return jsonResponse({ error: 'Missing or invalid "text" parameter' }, 400);
+        }
+
+        if (!encryptedRegex.test(text)) {
+          return jsonResponse({ error: 'Bad Request: Message content must be encrypted.' }, 400);
         }
 
         // Sanitize username and content of ANSI escape sequences to prevent terminal XSS
