@@ -85,12 +85,16 @@ process.stdin.on('keypress', (char, key) => {
 });
 
 function promptAlias() {
+  // Ensure no leftover input and reset cursor
+  rl.line = '';
+  rl.cursor = 0;
   clearScreen();
   drawBanner();
-  
-  process.stdout.write(`${COLORS.YELLOW}${COLORS.BOLD}Choose an alias: ${COLORS.RESET}`);
-  
-  rl.question('', async (input) => {
+
+  // Use rl.question's prompt argument so the text is reliably shown
+  rl.question(`${COLORS.YELLOW}${COLORS.BOLD}Choose an alias: ${COLORS.RESET}`, async (input) => {
+    // After user presses Enter the mute flag may still be true; clear it
+    muteNewline = false;
     const alias = input.trim();
     if (!alias) {
       process.stdout.write('\n' + formatError('Alias cannot be empty. Please try again.') + '\n');
@@ -119,17 +123,11 @@ function promptAlias() {
 function promptPassword(alias) {
   rl.line = '';
   rl.cursor = 0;
-  process.stdout.write('\r\x1B[K');
-  process.stdout.write(`${COLORS.YELLOW}${COLORS.BOLD}This alias is locked. Enter password: ${COLORS.RESET}`);
-  
-  muteInput = true;
-  rl.question('', async (password) => {
-    muteInput = false;
-    process.stdout.write('\n');
-    
+  rl.question(`${COLORS.YELLOW}${COLORS.BOLD}This alias is locked. Enter password: ${COLORS.RESET}`, async (password) => {
+    muteNewline = false;
     const pw = password.trim();
     if (!pw) {
-      process.stdout.write(formatError('Password cannot be empty. Please try again.') + '\n');
+      process.stdout.write('\n' + formatError('Password cannot be empty. Please try again.') + '\n');
       setTimeout(() => promptPassword(alias), 1500);
       return;
     }
@@ -141,11 +139,11 @@ function promptPassword(alias) {
         setToken(res.token);
         initChat();
       } else {
-        process.stdout.write(formatError('Failed to verify alias.') + '\n');
+        process.stdout.write('\n' + formatError('Failed to verify alias.') + '\n');
         setTimeout(promptAlias, 1500);
       }
     } catch (err) {
-      process.stdout.write(formatError(err.message || 'Incorrect password or verification error.') + '\n');
+      process.stdout.write('\n' + formatError(err.message || 'Incorrect password or verification error.') + '\n');
       setTimeout(promptAlias, 1500);
     }
   });
@@ -154,10 +152,8 @@ function promptPassword(alias) {
 function promptLockOption(alias) {
   rl.line = '';
   rl.cursor = 0;
-  process.stdout.write('\r\x1B[K');
-  process.stdout.write(`${COLORS.YELLOW}${COLORS.BOLD}Would you like to lock @${alias} with a password? (y/n): ${COLORS.RESET}`);
-  
-  rl.question('', (ans) => {
+  rl.question(`${COLORS.YELLOW}${COLORS.BOLD}Would you like to lock @${alias} with a password? (y/n): ${COLORS.RESET}`, (ans) => {
+    muteNewline = false;
     const response = ans.trim().toLowerCase();
     if (response === 'y' || response === 'yes') {
       promptCreatePassword(alias);
@@ -166,6 +162,7 @@ function promptLockOption(alias) {
       setToken('');
       initChat();
     } else {
+      // Invalid response – ask again
       promptLockOption(alias);
     }
   });
